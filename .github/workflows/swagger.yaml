@@ -18,9 +18,11 @@ jobs:
         with:
           output: public/swagger-ui
           spec-file: swagger.yaml
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: public/swagger-ui
+          token: ${{ secrets.GITHUB_TOKEN }}
