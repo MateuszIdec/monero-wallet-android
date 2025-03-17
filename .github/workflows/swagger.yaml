@@ -1,0 +1,31 @@
+name: Deploy Swagger Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-swagger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate OpenAPI spec
+        uses: char0n/swagger-editor-validate@v1
+        with:
+          definition-file: swagger.yaml
+
+      - name: Generate Swagger UI
+        uses: Legion2/swagger-ui-action@v1
+        with:
+          output: public/swagger-ui
+          spec-file: swagger.yaml
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: public/swagger-ui
