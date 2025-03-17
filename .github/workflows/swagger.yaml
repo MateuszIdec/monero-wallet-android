@@ -17,7 +17,7 @@ jobs:
         uses: Legion2/swagger-ui-action@v1
         with:
           output: public/swagger-ui
-          spec-file: swagger.yaml
+          spec-file: backend/docs/swagger.yaml
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy to GitHub Pages
