@@ -1,0 +1,37 @@
+services:
+  monero-rpc:
+    build:
+      context: ./monero-rpc
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - net
+    volumes:
+      - type: bind
+        source: ./srv/monero-rpc
+        target: /home/monero/wallet
+        is_directory: true
+
+    command:
+      - --wallet-dir=/home/monero/wallet
+      - --daemon-address=${MONERO_DAEMON_ADDRESS}
+      - --rpc-bind-ip=0.0.0.0
+      - --rpc-bind-port=18083
+      - --confirm-external-bind
+      - --no-initial-sync
+      - --disable-rpc-login
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - monero-rpc
+    networks:
+      - net
+    ports:
+      - "127.0.0.1:3002:3002"
+
+networks:
+  net:
+    driver: bridge
