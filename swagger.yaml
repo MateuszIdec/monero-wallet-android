@@ -3,7 +3,7 @@ info:
   title: Wallet API
   version: 1.0.0
 servers:
-  - url: http://localhost:8000
+  - url: http://192.168.1.38:3002
 
 components:
   parameters:
@@ -51,6 +51,46 @@ paths:
                     example: uuid
         400:
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wallet/{crypto}/balance:
+    parameters:
+      - $ref: "#/components/parameters/crypto"
+    get:
+      summary: Get wallet balance
+      security:
+        - Auth: []
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  confirmed:
+                    type: number
+                    example: 0.1
+                  unconfirmed:
+                    type: number
+                    example: 0.01
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
           content:
             application/json:
               schema:
