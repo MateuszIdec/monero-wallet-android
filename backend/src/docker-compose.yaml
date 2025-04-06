@@ -11,7 +11,8 @@ services:
         source: ./srv/monero-rpc
         target: /home/monero/wallet
         is_directory: true
-
+    environment:
+      MONERO_DAEMON_ADDRESS=
     command:
       - --wallet-dir=/home/monero/wallet
       - --daemon-address=${MONERO_DAEMON_ADDRESS}
