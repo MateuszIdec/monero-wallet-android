@@ -19,7 +19,6 @@ services:
       - --rpc-bind-ip=0.0.0.0
       - --rpc-bind-port=18083
       - --confirm-external-bind
-      - --no-initial-sync
       - --disable-rpc-login
   api:
     build:
