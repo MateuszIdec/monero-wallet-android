@@ -192,8 +192,8 @@ func (m *Monero) CreateWallet(filename string) error {
 	return nil
 }
 
-func (m *Monero) OpenWallet(filename string) error {
-	_, err := wallet.RPC(m.rpcUrl, "0", "open_wallet", map[string]any{"filename": filename})
+func (m *Monero) OpenWallet(filename, password string) error {
+	_, err := wallet.RPC(m.rpcUrl, "0", "open_wallet", map[string]any{"filename": filename, "password": password})
 	if err != nil {
 		return err
 	}

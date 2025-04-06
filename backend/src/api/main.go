@@ -16,13 +16,12 @@ func main() {
 		log.Fatalln("[ERROR] API_PORT has to be a number")
 	}
 
-	token := getEnv("TOKEN", "default")
-	if token == "default" {
-		log.Println("[WARNING] Using default token")
-	}
+	demoToken := getEnv("DEMO_TOKEN", "")
+	demoWallet := getEnv("DEMO_WALLET_FILE", "")
+	demoWalletPassword := getEnv("DEMO_WALLET_PASSWORD", "")
 
 	m := monero.New(monerodURL, moneroRpcURL)
-	s := server.New(m, token)
+	s := server.New(m, server.DemoWallet{Token: demoToken, File: demoWallet, Password: demoWalletPassword})
 
 	err = s.Start(uint(apiPort))
 	if err != nil {

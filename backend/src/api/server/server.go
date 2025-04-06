@@ -11,9 +11,15 @@ import (
 
 type Server struct {
 	monero           *monero.Monero
-	token            string
 	openedWalletFile string
 	mutex            sync.Mutex
+	demo             DemoWallet
+}
+
+type DemoWallet struct {
+	Token    string
+	File     string
+	Password string
 }
 
 type errorResponse struct {
@@ -21,13 +27,13 @@ type errorResponse struct {
 	Error   string `json:"error"`
 }
 
-func New(monero *monero.Monero, token string) Server {
-	return Server{monero: monero, token: token}
+func New(monero *monero.Monero, demoWallet DemoWallet) Server {
+	return Server{monero: monero, demo: demoWallet}
 }
 
 func (s *Server) Start(port uint) error {
 	portString := ":" + strconv.Itoa(int(port))
-	auth := authMiddleware(s.token)
+	auth := s.authMiddleware()
 	mux := http.NewServeMux()
 	handler := enableCORS(mux)
 
@@ -71,6 +77,7 @@ func (s *Server) handleWalletBalance(w http.ResponseWriter, r *http.Request) {
 		response(w, http.StatusBadRequest, errorResponse{Message: "wallet file has to be specified", Error: "NO_WALLET_FILE"})
 		return
 	}
+	walletPassword := w.Header().Get("Wallet-Password")
 
 	c := r.PathValue("crypto")
 	if c != "XMR" {
@@ -78,7 +85,7 @@ func (s *Server) handleWalletBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := s.claimWallet(walletFile)
+	err := s.claimWallet(walletFile, walletPassword)
 	if err != nil {
 		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to open wallet", Error: "FAILED_TO_OPEN_WALLET"})
 		return
@@ -94,12 +101,12 @@ func (s *Server) handleWalletBalance(w http.ResponseWriter, r *http.Request) {
 	response(w, http.StatusOK, balanceResponse{Confirmed: confirmed, Unconfirmed: unconfirmed})
 }
 
-func (s *Server) claimWallet(filename string) error {
+func (s *Server) claimWallet(filename, password string) error {
 	s.mutex.Lock()
 	if filename == s.openedWalletFile {
 		return nil
 	}
-	err := s.monero.OpenWallet(filename)
+	err := s.monero.OpenWallet(filename, password)
 	if err != nil {
 		s.mutex.Unlock()
 		return err
@@ -113,13 +120,14 @@ func (s *Server) releaseWallet() {
 	s.mutex.Unlock()
 }
 
-func authMiddleware(expectedToken string) func(next http.Handler) http.Handler {
+func (s *Server) authMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get("Authorization")
 
-			if token == expectedToken {
-				w.Header().Set("Wallet-File", "test")
+			if token != "" && token == s.demo.Token {
+				w.Header().Set("Wallet-File", s.demo.File)
+				w.Header().Set("Wallet-Password", s.demo.Password)
 				next.ServeHTTP(w, r)
 				return
 			}
