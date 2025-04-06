@@ -12,7 +12,7 @@ services:
         target: /home/monero/wallet
         is_directory: true
     environment:
-      MONERO_DAEMON_ADDRESS=
+      MONERO_DAEMON_ADDRESS:
     command:
       - --wallet-dir=/home/monero/wallet
       - --daemon-address=${MONERO_DAEMON_ADDRESS}
