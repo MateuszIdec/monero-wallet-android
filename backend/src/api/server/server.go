@@ -63,7 +63,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.Write(jsonData)
+	response(w, http.StatusOK, jsonData)
 }
 
 type balanceResponse struct {
