@@ -102,11 +102,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /wallet/{crypto}:
+  /wallet/{crypto}/addresses:
     parameters:
       - $ref: "#/components/parameters/crypto"
     get:
-      summary: Get wallet information (balance, recent transactions, generated addresses)
+      summary: Get generated addresses
       security:
         - Auth: []
       responses:
@@ -115,57 +115,12 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  balance:
-                    type: object
-                    properties:
-                      confirmed:
-                        type: number
-                        example: 0.1
-                      unconfirmed:
-                        type: number
-                        example: 0.01
-                  transactions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        address:
-                          type: string
-                          example: address
-                        amount:
-                          description: Negative value means outgoing transaction
-                          type: number
-                          example: 0.02
-                        confirmations:
-                          type: integer
-                          example: 2
-                  addresses:
-                    type: array
-                    items:
-                      type: string
-                      example: address
-        400:
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        500:
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                  type: array
+                  items:
+                    type: string
+                    example: address
 
-  /address/{crypto}:
+  /wallet/{crypto}/address:
     parameters:
       - $ref: "#/components/parameters/crypto"
     post:
@@ -202,11 +157,100 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /payment/{crypto}:
+  /wallet/{crypto}/transactions:
+    parameters:
+      - $ref: "#/components/parameters/crypto"
+    get:
+      summary: Get transactions
+      security:
+        - Auth: []
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  in:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                          example: address
+                        amount:
+                          description: Negative value means outgoing transaction
+                          type: number
+                          example: 0.02
+                        fee:
+                          type: number
+                          example: 0.00001
+                        confirmations:
+                          type: integer
+                          example: 832
+                  out:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                          example: address
+                        amount:
+                          description: Negative value means outgoing transaction
+                          type: number
+                          example: 0.02
+                        fee:
+                          type: number
+                          example: 0.00001
+                        confirmations:
+                          type: integer
+                          example: 470
+                  pending:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                          example: address
+                        amount:
+                          description: Negative value means outgoing transaction
+                          type: number
+                          example: 0.02
+                        fee:
+                          type: number
+                          example: 0.00001
+                        confirmations:
+                          type: integer
+                          example: 0
+
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wallet/{crypto}/transaction:
     parameters:
       - $ref: "#/components/parameters/crypto"
     post:
-      summary: Create a transaction
+      summary: Create a new transaction
       security:
         - Auth: []
       requestBody:
@@ -229,7 +273,6 @@ paths:
             application/json:
               schema:
                 type: object
-
         400:
           description: Bad Request
           content:
