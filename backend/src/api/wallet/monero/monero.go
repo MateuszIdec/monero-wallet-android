@@ -121,7 +121,7 @@ func (m *Monero) Status() (*wallet.Status, error) {
 	}
 
 	return &wallet.Status{Name: "monerod_monero-rpc", Connected: !info.Offline, Connections: info.OutgoingConnections,
-		VerificationProgress: float64(info.Height), DaemonHeight: height}, nil
+		VerificationProgress: float64(info.Height), WalletHeight: height}, nil
 }
 
 func (m *Monero) Balance(address string) (confirmed, unconfirmed float64, err error) {
