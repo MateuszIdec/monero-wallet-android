@@ -129,17 +129,17 @@ func (s *Server) handleNewTransaction(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if transactionData.Amount <= 0 {
-		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to parse json data: " + err.Error(), Error: "WALLET_NEW_TRANSACTION_INCORRECT_AMOUNT"})
+		response(w, http.StatusBadRequest, errorResponse{Message: "Amount must be greater than 0", Error: "WALLET_NEW_TRANSACTION_INCORRECT_AMOUNT"})
 		return
 	}
 
-	err = s.monero.Transfer(transactionData.Address, transactionData.Amount)
+	result, err := s.monero.Transfer(transactionData.Address, transactionData.Amount)
 	if err != nil {
 		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed to create new transaction: " + err.Error(), Error: "WALLET_NEW_TRANSACTION_ERROR"})
 		return
 	}
 
-	response(w, http.StatusOK, nil)
+	response(w, http.StatusOK, result)
 }
 
 type balanceResponse struct {

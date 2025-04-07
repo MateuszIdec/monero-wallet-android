@@ -60,15 +60,15 @@ func (m *Monero) deamonInfo() (uint64, error) {
 
 type addressData struct {
 	Address         string `json:"address"`
-	AddressIndex    uint64 `json:"addressIndex"`
+	AddressIndex    uint64 `json:"address_index"`
 	TotalBalance    uint64 `json:"balance"`
-	UnlockedBalance uint64 `json:"unlockedBalance"`
+	UnlockedBalance uint64 `json:"unlocked_balance"`
 }
 
 type getBalanceResponse struct {
 	TotalBalance    uint64        `json:"balance"`
-	UnlockedBalance uint64        `json:"unlockedBalance"`
-	PerSubaddress   []addressData `json:"perSubaddress"`
+	UnlockedBalance uint64        `json:"unlocked_balance"`
+	PerSubaddress   []addressData `json:"per_subaddress"`
 }
 
 func (m *Monero) getBalance(addressIndexes []uint64) (*getBalanceResponse, error) {
@@ -150,7 +150,7 @@ func (m *Monero) Balance(address string) (confirmed, unconfirmed float64, err er
 
 type totalBalanceResponse struct {
 	TotalBalance    uint64 `json:"balance"`
-	UnlockedBalance uint64 `json:"unlockedBalance"`
+	UnlockedBalance uint64 `json:"unlocked_balance"`
 }
 
 func (m *Monero) TotalBalance() (confirmed, unconfirmed float64, err error) {
@@ -231,14 +231,25 @@ func (m *Monero) CloseWallet() error {
 	return nil
 }
 
-func (m *Monero) Transfer(address string, amount float64) error {
+type transferData struct {
+	Amount uint64 `json:"amount"`
+	Fee    uint64 `json:"fee"`
+	TxHash string `json:"tx_hash"`
+}
+
+func (m *Monero) Transfer(address string, amount float64) (wallet.TransferResult, error) {
 	atomicAmount := xmrToAtomic(amount)
-	_, err := wallet.RPC(m.rpcUrl, "0", "transfer", map[string]any{"destinations": []any{map[string]any{"address": address, "amount": atomicAmount}}, "priority": 0})
+	body, err := wallet.RPC(m.rpcUrl, "0", "transfer", map[string]any{"destinations": []any{map[string]any{"address": address, "amount": atomicAmount}}, "priority": 0})
 	if err != nil {
-		return err
+		return wallet.TransferResult{}, err
+	}
+	var r transferData
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return wallet.TransferResult{}, err
 	}
 
-	return nil
+	return wallet.TransferResult{Amount: atomicToXmr(r.Amount), Fee: atomicToXmr(r.Fee), TxHash: r.TxHash}, nil
 }
 
 type Transaction struct {

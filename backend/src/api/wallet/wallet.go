@@ -29,6 +29,12 @@ type resultRes struct {
 	Result json.RawMessage `json:"result"`
 }
 
+type TransferResult struct {
+	Amount float64 `json:"amount"`
+	Fee    float64 `json:"fee"`
+	TxHash string  `json:"txHash"`
+}
+
 func RPC(rpcUrl string, id string, method string, params map[string]any) ([]byte, error) {
 	var p string
 	l := len(params)
@@ -56,8 +62,7 @@ func RPC(rpcUrl string, id string, method string, params map[string]any) ([]byte
 		return nil, errors.New("failed to read body: " + err.Error())
 	}
 
-	log.Println("Response")
-	log.Println(res.StatusCode)
+	log.Printf("Response %d", res.StatusCode)
 	log.Println(string(body))
 
 	var walletError errorRes
