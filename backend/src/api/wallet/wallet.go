@@ -10,10 +10,11 @@ import (
 )
 
 type Status struct {
-	Name                 string
-	Connected            bool
-	Connections          int
-	VerificationProgress float64
+	Name                 string  `json:"name"`
+	Connected            bool    `json:"connected"`
+	Connections          uint64  `json:"connections"`
+	VerificationProgress float64 `json:"verificationProgress"`
+	DaemonHeight         uint64  `json:"daemonHeight"`
 }
 
 type errorRes struct {

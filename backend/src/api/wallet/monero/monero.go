@@ -18,10 +18,10 @@ func New(monerodUrl string, rpcUrl string) *Monero {
 }
 
 type networkInfo struct {
-	Offline             bool `json:"offline"`
-	OutgoingConnections int  `json:"outgoing_connections_count"`
-	Height              int  `json:"height"`
-	TargetHeight        int  `json:"target_height"`
+	Offline             bool   `json:"offline"`
+	OutgoingConnections uint64 `json:"outgoing_connections_count"`
+	Height              uint64 `json:"height"`
+	TargetHeight        uint64 `json:"target_height"`
 }
 
 func (m *Monero) networkInfo() (*networkInfo, error) {
@@ -37,6 +37,25 @@ func (m *Monero) networkInfo() (*networkInfo, error) {
 	}
 
 	return &result, nil
+}
+
+type daemonHeight struct {
+	Height uint64 `json:"height"`
+}
+
+func (m *Monero) deamonInfo() (uint64, error) {
+	body, err := wallet.RPC(m.rpcUrl, "0", "get_height", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	var result daemonHeight
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return 0, err
+	}
+
+	return result.Height, nil
 }
 
 type addressData struct {
@@ -96,7 +115,13 @@ func (m *Monero) Status() (*wallet.Status, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &wallet.Status{Name: "monerod_monero-rpc", Connected: !info.Offline, Connections: info.OutgoingConnections, VerificationProgress: float64(info.Height)}, nil
+	height, err := m.deamonInfo()
+	if err != nil {
+		return nil, err
+	}
+
+	return &wallet.Status{Name: "monerod_monero-rpc", Connected: !info.Offline, Connections: info.OutgoingConnections,
+		VerificationProgress: float64(info.Height), DaemonHeight: height}, nil
 }
 
 func (m *Monero) Balance(address string) (confirmed, unconfirmed float64, err error) {

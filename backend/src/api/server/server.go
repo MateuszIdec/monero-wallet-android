@@ -40,7 +40,7 @@ func (s *Server) Start(port uint) error {
 
 	mux.HandleFunc("/status", s.handleStatus)
 	mux.Handle("/wallet/{crypto}/balance", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleBalance))))
-	mux.Handle("/wallet/{crypto}/addresses", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleBalance))))
+	mux.Handle("/wallet/{crypto}/addresses", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleAddresses))))
 	mux.Handle("POST /wallet/{crypto}/address", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleNewAddress))))
 	mux.Handle("/wallet/{crypto}/transactions", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleTransactions))))
 	mux.Handle("POST /wallet/{crypto}/transaction", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleNewTransaction))))
@@ -138,6 +138,7 @@ func (s *Server) handleBalance(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) claimWallet(filename, password string) error {
+	log.Println("claimWallet")
 	s.mutex.Lock()
 	if filename == s.openedWalletFile {
 		return nil
@@ -153,6 +154,7 @@ func (s *Server) claimWallet(filename, password string) error {
 }
 
 func (s *Server) releaseWallet() {
+	log.Println("releaseWallet")
 	s.mutex.Unlock()
 }
 
