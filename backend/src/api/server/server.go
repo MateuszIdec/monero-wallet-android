@@ -183,8 +183,8 @@ func (s *Server) authMiddleware(next http.Handler) http.HandlerFunc {
 		token := r.Header.Get("Authorization")
 
 		if token != "" && token == s.demo.Token {
-			w.Header().Set("Wallet-File", s.demo.File)
-			w.Header().Set("Wallet-Password", s.demo.Password)
+			r.Header.Set("Wallet-File", s.demo.File)
+			r.Header.Set("Wallet-Password", s.demo.Password)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -203,12 +203,12 @@ func (s *Server) walletMiddleware(next http.Handler) http.HandlerFunc {
 			return
 		}
 
-		walletFile := w.Header().Get("Wallet-File")
+		walletFile := r.Header.Get("Wallet-File")
 		if walletFile == "" {
 			response(w, http.StatusBadRequest, errorResponse{Message: "wallet file has to be specified", Error: "NO_WALLET_FILE"})
 			return
 		}
-		walletPassword := w.Header().Get("Wallet-Password")
+		walletPassword := r.Header.Get("Wallet-Password")
 
 		err := s.claimWallet(walletFile, walletPassword)
 		if err != nil {
