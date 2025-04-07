@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 type Server struct {
@@ -60,10 +61,12 @@ func (s *Server) openDemoWallet() {
 		return
 	}
 
-	log.Println("[INFO] Opening demo wallet file")
+	log.Println("[INFO] Opening demo wallet file after 10 seconds")
+	time.Sleep(10 * time.Second)
 	err := s.monero.OpenWallet(s.demo.File, s.demo.Password)
 	if err != nil {
 		log.Println("[ERROR] Failed to open demo wallet file: " + err.Error())
+		return
 	}
 
 	s.openedWalletFile = s.demo.File
