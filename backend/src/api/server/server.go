@@ -192,7 +192,6 @@ func (s *Server) authMiddleware(next http.Handler) http.HandlerFunc {
 		// Google OAuth validation
 
 		response(w, http.StatusUnauthorized, errorResponse{Message: "Unauthorized"})
-		return
 	}
 }
 

@@ -60,15 +60,15 @@ func (m *Monero) deamonInfo() (uint64, error) {
 
 type addressData struct {
 	Address         string `json:"address"`
-	AddressIndex    uint64 `json:"address_index"`
+	AddressIndex    uint64 `json:"addressIndex"`
 	TotalBalance    uint64 `json:"balance"`
-	UnlockedBalance uint64 `json:"unlocked_balance"`
+	UnlockedBalance uint64 `json:"unlockedBalance"`
 }
 
 type getBalanceResponse struct {
 	TotalBalance    uint64        `json:"balance"`
-	UnlockedBalance uint64        `json:"unlocked_balance"`
-	PerSubaddress   []addressData `json:"per_subaddress"`
+	UnlockedBalance uint64        `json:"unlockedBalance"`
+	PerSubaddress   []addressData `json:"perSubaddress"`
 }
 
 func (m *Monero) getBalance(addressIndexes []uint64) (*getBalanceResponse, error) {
@@ -150,7 +150,7 @@ func (m *Monero) Balance(address string) (confirmed, unconfirmed float64, err er
 
 type totalBalanceResponse struct {
 	TotalBalance    uint64 `json:"balance"`
-	UnlockedBalance uint64 `json:"unlocked_balance"`
+	UnlockedBalance uint64 `json:"unlockedBalance"`
 }
 
 func (m *Monero) TotalBalance() (confirmed, unconfirmed float64, err error) {
