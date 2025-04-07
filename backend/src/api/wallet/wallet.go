@@ -14,7 +14,7 @@ type Status struct {
 	Connected            bool    `json:"connected"`
 	Connections          uint64  `json:"connections"`
 	VerificationProgress float64 `json:"verificationProgress"`
-	DaemonHeight         uint64  `json:"daemonHeight"`
+	WalletHeight         uint64  `json:"walletHeight"`
 }
 
 type errorRes struct {

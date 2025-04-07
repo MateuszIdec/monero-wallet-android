@@ -45,12 +45,29 @@ func (s *Server) Start(port uint) error {
 	mux.Handle("/wallet/{crypto}/transactions", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleTransactions))))
 	mux.Handle("POST /wallet/{crypto}/transaction", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleNewTransaction))))
 
+	s.openDemoWallet()
+
 	log.Printf("[INFO] Starting server on port %d", port)
 	err := http.ListenAndServe(portString, handler)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *Server) openDemoWallet() {
+	if s.demo.File == "" {
+		return
+	}
+
+	log.Println("[INFO] Opening demo wallet file")
+	err := s.monero.OpenWallet(s.demo.File, s.demo.Password)
+	if err != nil {
+		log.Println("[ERROR] Failed to open demo wallet file: " + err.Error())
+	}
+
+	s.openedWalletFile = s.demo.File
+	log.Println("[INFO] Demo wallet opened successfully")
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
