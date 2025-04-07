@@ -99,8 +99,6 @@ func (m *Monero) Status() (*wallet.Status, error) {
 	return &wallet.Status{Name: "monerod_monero-rpc", Connected: !info.Offline, Connections: info.OutgoingConnections, VerificationProgress: float64(info.Height)}, nil
 }
 
-const atomicToXMR float64 = 1e12
-
 func (m *Monero) Balance(address string) (confirmed, unconfirmed float64, err error) {
 	result, err := m.addressIndex(address)
 	log.Printf("Index for address %s is %d", address, result)
@@ -115,8 +113,8 @@ func (m *Monero) Balance(address string) (confirmed, unconfirmed float64, err er
 
 	for _, a := range addresses.PerSubaddress {
 		if address == a.Address {
-			confirmed := float64(a.UnlockedBalance) / atomicToXMR
-			unconfirmed := float64(a.TotalBalance-a.UnlockedBalance) / atomicToXMR
+			confirmed := atomicToXmr(a.UnlockedBalance)
+			unconfirmed := atomicToXmr(a.TotalBalance - a.UnlockedBalance)
 
 			return confirmed, unconfirmed, nil
 		}
@@ -142,8 +140,8 @@ func (m *Monero) TotalBalance() (confirmed, unconfirmed float64, err error) {
 		return 0, 0, err
 	}
 
-	return float64(balance.UnlockedBalance) / atomicToXMR,
-		float64(balance.TotalBalance-balance.UnlockedBalance) / atomicToXMR, nil
+	return atomicToXmr(balance.UnlockedBalance),
+		atomicToXmr(balance.TotalBalance - balance.UnlockedBalance), nil
 }
 
 type address struct {
@@ -226,30 +224,60 @@ type Transaction struct {
 	Confirmations uint64 `json:"confirmations"`
 }
 
-type transactionsResponse struct {
+type transactionResponse struct {
+	Address       string  `json:"address"`
+	Amount        float64 `json:"amount"`
+	Type          string  `json:"type"`
+	Fee           float64 `json:"fee"`
+	Confirmations uint64  `json:"confirmations"`
+}
+
+type TransactionsResponse struct {
+	In      []transactionResponse `json:"in"`
+	Out     []transactionResponse `json:"out"`
+	Pending []transactionResponse `json:"pending"`
+}
+
+func transactionToResponse(t *Transaction) transactionResponse {
+	return transactionResponse{Address: t.Address, Amount: atomicToXmr(t.Amount), Type: t.Type, Fee: atomicToXmr(t.Fee), Confirmations: t.Confirmations}
+}
+
+type transactionsData struct {
 	In      []Transaction `json:"in"`
 	Out     []Transaction `json:"out"`
 	Pending []Transaction `json:"pending"`
 }
 
-func (m *Monero) Transactions() ([]Transaction, error) {
+func (m *Monero) Transactions() (TransactionsResponse, error) {
 	r, err := wallet.RPC(m.rpcUrl, "0", "get_transfers", map[string]any{"in": true, "out": true, "pending": true})
 	if err != nil {
-		return nil, err
+		return TransactionsResponse{}, err
 	}
-	var data transactionsResponse
+	var data transactionsData
 	err = json.Unmarshal(r, &data)
 	if err != nil {
-		return nil, err
+		return TransactionsResponse{}, err
 	}
 
-	var result []Transaction
-	result = append(result, data.In...)
-	result = append(result, data.Out...)
+	var result TransactionsResponse
+	for x := 0; x < len(data.In); x++ {
+		result.In = append(result.In, transactionToResponse(&data.In[x]))
+	}
+	for x := 0; x < len(data.Out); x++ {
+		result.Out = append(result.Out, transactionToResponse(&data.Out[x]))
+	}
+	for x := 0; x < len(data.Pending); x++ {
+		result.Pending = append(result.Pending, transactionToResponse(&data.Pending[x]))
+	}
 
 	return result, nil
 }
 
+const atomicToXMR float64 = 1e12
+
 func xmrToAtomic(xmr float64) uint64 {
-	return uint64(xmr * 1e12)
+	return uint64(xmr * atomicToXMR)
+}
+func atomicToXmr(atomic uint64) float64 {
+	return float64(atomic) / atomicToXMR
 }
