@@ -14,7 +14,7 @@ components:
       description: Type of cryptocurrency
       schema:
         type: string
-        enum: ["BTC", "LTC", "XMR"]
+        enum: ["XMR", "BTC", "LTC"]
   securitySchemes:
     Auth:
       type: apiKey
@@ -27,7 +27,7 @@ components:
       properties:
         message:
           type: string
-          example: Something went wrong on the server
+          example: Something went wrong 
         error:
           type: string
           example: ERROR_CODE
@@ -46,11 +46,46 @@ paths:
               schema:
                 type: object
                 properties:
-                  token:
+                  mnemonic:
                     type: string
-                    example: uuid
+                    example: "dog cat enough hat car wise bar fire ankle hint hospital enlist place family often sister pig water side gap want repair payment gun" 
+                  entropy:
+                    type: string
+                    example: dFqpk+xVc/jBa14JPyW3pWazSZuTKse+x+vr29tKGs=
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /account/entropy-from-mnemonic:
+    parameters:
+      - $ref: "#/components/parameters/crypto"
+    post:
+      summary: Get account token from mnemonic 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mnemonic:
+                  type: string
+                  example: "dog cat enough hat car wise bar fire ankle hint hospital enlist place family often sister pig water side gap want repair payment gun" 
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entropy:
+                    type: string
+                    example: dFqpk+xVc/jBa14JPyW3pWazSZuTKse+x+vr29tKGs=
         400:
-          description: Bad Request
+          description: Bad request 
           content:
             application/json:
               schema:
@@ -61,7 +96,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
   /wallet/{crypto}/balance:
     parameters:
       - $ref: "#/components/parameters/crypto"
@@ -84,7 +118,7 @@ paths:
                     type: number
                     example: 0.01
         400:
-          description: Bad Request
+          description: Bad request
           content:
             application/json:
               schema:
@@ -139,7 +173,7 @@ paths:
                     type: string
                     example: address
         400:
-          description: Bad Request
+          description: Bad request
           content:
             application/json:
               schema:
@@ -181,7 +215,6 @@ paths:
                           type: string
                           example: address
                         amount:
-                          description: Negative value means outgoing transaction
                           type: number
                           example: 0.02
                         fee:
@@ -199,7 +232,6 @@ paths:
                           type: string
                           example: address
                         amount:
-                          description: Negative value means outgoing transaction
                           type: number
                           example: 0.02
                         fee:
@@ -217,7 +249,6 @@ paths:
                           type: string
                           example: address
                         amount:
-                          description: Negative value means outgoing transaction
                           type: number
                           example: 0.02
                         fee:
@@ -228,7 +259,7 @@ paths:
                           example: 0
 
         400:
-          description: Bad Request
+          description: Bad request
           content:
             application/json:
               schema:
@@ -274,7 +305,7 @@ paths:
               schema:
                 type: object
         400:
-          description: Bad Request
+          description: Bad request
           content:
             application/json:
               schema:
