@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"net/http"
 
@@ -36,7 +37,7 @@ func newAccountData() (mnemonic string, entropy string, hash []byte, err error) 
 	h := sha256.Sum256(entropyBytes)
 	hash = h[:]
 
-	return mnemonic, string(entropyBytes), hash, nil
+	return mnemonic, base64.StdEncoding.EncodeToString(entropyBytes), hash, nil
 }
 
 func entropyFromMnemonic(mnemonic string) (string, error) {
@@ -45,7 +46,7 @@ func entropyFromMnemonic(mnemonic string) (string, error) {
 		return "", err
 	}
 
-	return string(entropyBytes), nil
+	return base64.StdEncoding.EncodeToString(entropyBytes), nil
 }
 
 func hash(data []byte) []byte {
@@ -58,7 +59,11 @@ func (s *Server) accountMoneroWallet(entropy string) (file string, password stri
 	if entropy == s.demo.Token {
 		return s.demo.File, s.demo.Password, nil
 	}
-	h := hash([]byte(entropy))
+	entropyBytes, err := base64.StdEncoding.DecodeString(entropy)
+	if err != nil {
+		return "", "", err
+	}
+	h := hash(entropyBytes)
 	filename, err := s.q.MoneroWallet(context.Background(), h)
 	if err != nil {
 		return "", "", err
