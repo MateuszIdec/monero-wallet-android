@@ -207,8 +207,8 @@ func (m *Monero) Addresses() (*Addresses, error) {
 	return &result, nil
 }
 
-func (m *Monero) CreateWallet(filename string) error {
-	_, err := wallet.RPC(m.rpcUrl, "0", "create_wallet", map[string]any{"filename": filename, "language": "English"})
+func (m *Monero) CreateWallet(filename, password string) error {
+	_, err := wallet.RPC(m.rpcUrl, "0", "create_wallet", map[string]any{"filename": filename, "password": password, "language": "English"})
 	if err != nil {
 		return err
 	}

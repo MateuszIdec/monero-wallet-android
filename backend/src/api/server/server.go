@@ -1,7 +1,9 @@
 package server
 
 import (
+	"api/db/models"
 	"api/wallet/monero"
+	"context"
 	"encoding/json"
 	"io"
 	"log"
@@ -9,9 +11,13 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Server struct {
+	q                *models.Queries
 	monero           *monero.Monero
 	openedWalletFile string
 	mutex            sync.Mutex
@@ -29,8 +35,8 @@ type errorResponse struct {
 	Error   string `json:"error"`
 }
 
-func New(monero *monero.Monero, demoWallet DemoWallet) Server {
-	return Server{monero: monero, demo: demoWallet}
+func New(q *models.Queries, monero *monero.Monero, demoWallet DemoWallet) Server {
+	return Server{q: q, monero: monero, demo: demoWallet}
 }
 
 func (s *Server) Start(port uint) error {
@@ -40,6 +46,8 @@ func (s *Server) Start(port uint) error {
 	handler := enableCORS(mux)
 
 	mux.HandleFunc("/status", s.handleStatus)
+	mux.HandleFunc("POST /account/new", s.handleNewAccount)
+	mux.HandleFunc("POST /account/entropy-from-mnemonic", s.handleEntropyFromMnemonic)
 	mux.Handle("/wallet/{crypto}/balance", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleBalance))))
 	mux.Handle("/wallet/{crypto}/addresses", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleAddresses))))
 	mux.Handle("POST /wallet/{crypto}/address", s.authMiddleware(s.walletMiddleware(http.HandlerFunc(s.handleNewAddress))))
@@ -54,6 +62,72 @@ func (s *Server) Start(port uint) error {
 		return err
 	}
 	return nil
+}
+
+type newAccountResponse struct {
+	Mnemonic string `json:"mnemonic"`
+	Entropy  string `json:"entropy"`
+}
+
+func (s *Server) handleNewAccount(w http.ResponseWriter, _ *http.Request) {
+	mnemonic, entropy, hash, err := newAccountData()
+	if err != nil {
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create new account", Error: "ACCOUNT_CREATION_ERROR"})
+		return
+	}
+
+	err = s.q.CreateAccount(context.Background(), hash)
+	if err != nil {
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create new account", Error: "ACCOUNT_CREATION_ERROR"})
+		return
+	}
+
+	uuid := uuid.New().String()
+	err = s.monero.CreateWallet(uuid, entropy)
+	if err != nil {
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create monero wallet for new account", Error: "ACCOUNT_CREATION_MONERO_WALLET_ERROR"})
+		return
+	}
+
+	err = s.q.SetMoneroWallet(context.Background(), models.SetMoneroWalletParams{Hash: hash, MoneroWallet: pgtype.Text{String: uuid, Valid: true}})
+	if err != nil {
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed to add monero wallet to new account", Error: "ACCOUNT_CREATION_MONERO_WALLET_DB_ERROR"})
+		return
+	}
+
+	response(w, http.StatusOK, newAccountResponse{Mnemonic: mnemonic, Entropy: entropy})
+}
+
+type entropyFromMnemonicRequest struct {
+	Mnemonic string `json:"mnemonic"`
+}
+
+type entropyFromMnemonicResponse struct {
+	Entropy string `json:"entropy"`
+}
+
+func (s *Server) handleEntropyFromMnemonic(w http.ResponseWriter, r *http.Request) {
+	bodyData, err := io.ReadAll(r.Body)
+	if err != nil {
+		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to parse json data: " + err.Error(), Error: "INVALID_JSON"})
+		return
+	}
+
+	var data entropyFromMnemonicRequest
+	err = json.Unmarshal(bodyData, &data)
+	if err != nil {
+		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to parse json data: " + err.Error(), Error: "INVALID_JSON"})
+		return
+	}
+
+	entropy, err := entropyFromMnemonic(data.Mnemonic)
+	if err != nil {
+		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to generate entropy from mnemonic: " + err.Error(), Error: "ENTROPY_FROM_MNEMONIC_ERROR"})
+		return
+	}
+
+	response(w, http.StatusOK, entropyFromMnemonicResponse{Entropy: entropy})
+
 }
 
 func (s *Server) openDemoWallet() {
@@ -76,7 +150,7 @@ func (s *Server) openDemoWallet() {
 func (s *Server) handleStatus(w http.ResponseWriter, _ *http.Request) {
 	status, err := s.monero.Status()
 	if err != nil {
-		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to get status"})
+		response(w, http.StatusBadRequest, errorResponse{Message: "Failed to get status", Error: "STATUS_ERROR"})
 		return
 	}
 	response(w, http.StatusOK, status)
@@ -178,23 +252,6 @@ func (s *Server) releaseWallet() {
 	s.mutex.Unlock()
 }
 
-func (s *Server) authMiddleware(next http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("Authorization")
-
-		if token != "" && token == s.demo.Token {
-			r.Header.Set("Wallet-File", s.demo.File)
-			r.Header.Set("Wallet-Password", s.demo.Password)
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// Google OAuth validation
-
-		response(w, http.StatusUnauthorized, errorResponse{Message: "Unauthorized"})
-	}
-}
-
 func (s *Server) walletMiddleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		c := r.PathValue("crypto")
@@ -205,7 +262,7 @@ func (s *Server) walletMiddleware(next http.Handler) http.HandlerFunc {
 
 		walletFile := r.Header.Get("Wallet-File")
 		if walletFile == "" {
-			response(w, http.StatusBadRequest, errorResponse{Message: "wallet file has to be specified", Error: "NO_WALLET_FILE"})
+			response(w, http.StatusBadRequest, errorResponse{Message: "Wallet file not specified", Error: "NO_WALLET_FILE"})
 			return
 		}
 		walletPassword := r.Header.Get("Wallet-Password")
