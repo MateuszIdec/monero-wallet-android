@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "399010568004",
+    "project_id": "monero-9ef79",
+    "storage_bucket": "monero-9ef79.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:399010568004:android:d6ea6687b541ec58992911",
+        "android_client_info": {
+          "package_name": "com.example.monero_jetpack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7qX1cL_rNr-WBPmP2ZRSKhn2G7CwsS_E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

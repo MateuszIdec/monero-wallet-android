@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -62,5 +63,36 @@ dependencies {
 
     // Compose UI
     implementation(libs.ui)
-    // ... other dependencies
+    // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:33.12.0"))
+
+    // Add the dependency for the Firebase Authentication library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-auth")
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation (libs.googleid)
+    implementation ("com.google.android.gms:play-services-auth:21.3.0")
+
+    implementation ("com.google.zxing:core:3.5.2")
+
+    implementation ("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation ("com.google.android.gms:play-services-mlkit-barcode-scanning:18.2.0")
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation (libs.accompanist.permissions)
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.9.1")
+
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.0")
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.6.0")
+    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.10.0")
+
+    implementation ("com.google.code.gson:gson:2.8.8")
+
+    implementation ("io.github.ehsannarmani:compose-charts:0.1.2")
+
 }

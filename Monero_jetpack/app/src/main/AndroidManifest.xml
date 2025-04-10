@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -15,6 +18,11 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
+            android:label="@string/settings"
+            android:theme="@style/Theme.Monero_jetpack" />
+        <activity
+            android:name=".QrScannerActivity"
+            android:exported="true"
             android:label="@string/settings"
             android:theme="@style/Theme.Monero_jetpack" />
         <activity
