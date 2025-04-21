@@ -72,26 +72,26 @@ type newAccountResponse struct {
 func (s *Server) handleNewAccount(w http.ResponseWriter, _ *http.Request) {
 	mnemonic, entropy, hash, err := newAccountData()
 	if err != nil {
-		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create new account", Error: "ACCOUNT_CREATION_ERROR"})
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed to create new account: " + err.Error(), Error: "ACCOUNT_CREATION_ERROR"})
 		return
 	}
 
 	err = s.q.CreateAccount(context.Background(), hash)
 	if err != nil {
-		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create new account", Error: "ACCOUNT_CREATION_ERROR"})
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed to create new account: " + err.Error(), Error: "ACCOUNT_CREATION_ERROR"})
 		return
 	}
 
 	uuid := uuid.New().String()
 	err = s.monero.CreateWallet(uuid, entropy)
 	if err != nil {
-		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create monero wallet for new account", Error: "ACCOUNT_CREATION_MONERO_WALLET_ERROR"})
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed create monero wallet for new account: " + err.Error(), Error: "ACCOUNT_CREATION_MONERO_WALLET_ERROR"})
 		return
 	}
 
 	err = s.q.SetMoneroWallet(context.Background(), models.SetMoneroWalletParams{Hash: hash, MoneroWallet: pgtype.Text{String: uuid, Valid: true}})
 	if err != nil {
-		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed to add monero wallet to new account", Error: "ACCOUNT_CREATION_MONERO_WALLET_DB_ERROR"})
+		response(w, http.StatusInternalServerError, errorResponse{Message: "Failed to add monero wallet to new account: " + err.Error(), Error: "ACCOUNT_CREATION_MONERO_WALLET_DB_ERROR"})
 		return
 	}
 
