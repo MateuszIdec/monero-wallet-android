@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -50,11 +51,11 @@ func main() {
 		log.Fatal("[ERROR] DB port has to be a number")
 	}
 
-	db, err := pgx.Connect(context.Background(), postgresConnString(dbUser, dbPassword, dbHost, int(dbPort), dbName))
+	db, err := pgxpool.New(context.Background(), postgresConnString(dbUser, dbPassword, dbHost, int(dbPort), dbName))
 	if err != nil {
 		log.Fatal("[ERROR] Failed to connect with postgresql: " + err.Error())
 	}
-	defer db.Close(context.Background())
+	defer db.Close()
 
 	queries := models.New(db)
 
