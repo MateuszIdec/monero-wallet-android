@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"time"
 )
 
 type Monero struct {
@@ -258,6 +259,7 @@ type Transaction struct {
 	Type          string `json:"type"`
 	Fee           uint64 `json:"fee"`
 	Confirmations uint64 `json:"confirmations"`
+	Timestamp     uint64 `json:"timestamp"`
 }
 
 type transactionResponse struct {
@@ -266,6 +268,7 @@ type transactionResponse struct {
 	Type          string  `json:"type"`
 	Fee           float64 `json:"fee"`
 	Confirmations uint64  `json:"confirmations"`
+	Timestamp     string  `json:"timestamp"`
 }
 
 type TransactionsResponse struct {
@@ -275,7 +278,8 @@ type TransactionsResponse struct {
 }
 
 func transactionToResponse(t *Transaction) transactionResponse {
-	return transactionResponse{Address: t.Address, Amount: atomicToXmr(t.Amount), Type: t.Type, Fee: atomicToXmr(t.Fee), Confirmations: t.Confirmations}
+	return transactionResponse{Address: t.Address, Amount: atomicToXmr(t.Amount), Type: t.Type, Fee: atomicToXmr(t.Fee),
+		Confirmations: t.Confirmations, Timestamp: time.Unix(int64(t.Timestamp), 0).Format(time.RFC3339)}
 }
 
 type transactionsData struct {
