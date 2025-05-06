@@ -225,7 +225,7 @@ paths:
                           example: 832
                         timestamp:
                           type: string 
-                          example: 2025-01-27T14:50:08Z
+                          example: "2025-01-27T14:50:08Z"
                   out:
                     type: array
                     items:
@@ -245,7 +245,7 @@ paths:
                           example: 470
                         timestamp:
                           type: string 
-                          example: 2025-01-27T14:50:08Z
+                          example: "2025-01-27T14:50:08Z"
                   pending:
                     type: array
                     items:
@@ -265,7 +265,7 @@ paths:
                           example: 0
                         timestamp:
                           type: string 
-                          example: 2025-01-27T14:50:08Z
+                          example: "2025-01-27T14:50:08Z"
 
         400:
           description: Bad request
